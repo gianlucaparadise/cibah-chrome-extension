@@ -1,0 +1,19 @@
+{
+    "name": "CIBAH - Commuter is buying a house",
+    "version": "0.0.1",
+    "description": "This extension tells you which is the closest subway station to a house for sale",
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.immobiliare.it/*"
+            ],
+            "js": [
+                "libs/jquery-3.1.1.min.js",
+                "libs/lodash.min.js",
+                "inject.js"
+            ],
+            "run_at": "document_end"
+        }
+    ],
+    "manifest_version": 2
+}
