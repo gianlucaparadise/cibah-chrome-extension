@@ -11,6 +11,7 @@
                 "libs/jquery-3.1.1.min.js",
                 "libs/lodash.min.js",
                 "utils.js",
+                "helpers/Geocoder.js",
                 "immobiliare/inject.js"
             ],
             "run_at": "document_end"
