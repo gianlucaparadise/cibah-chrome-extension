@@ -12,6 +12,7 @@
                 "libs/lodash.min.js",
                 "utils.js",
                 "helpers/Geocoder.js",
+                "helpers/WalkMeter.js",
                 "immobiliare/inject.js"
             ],
             "run_at": "document_end"
