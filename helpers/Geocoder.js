@@ -1,7 +1,7 @@
 /**
  * @typedef LatLon An object representing coordinates
  * @property {Number} latitude - Latitude value
- * @property {Number} longitude - Longirude value
+ * @property {Number} longitude - Longitude value
  */
 
 /**
