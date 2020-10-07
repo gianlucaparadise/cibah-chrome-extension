@@ -16,5 +16,8 @@ $(listOfAds).each(async (index, element) => {
 
 	log(() => `Title: ${title}, Location: ${location.latitude},${location.longitude}`);
 
-	await getSubwaysDistance(location.latitude, location.longitude);
+	const distanceToSubways = await getSubwaysDistance(location.latitude, location.longitude);
+
+	log(() => `Distance to Subways: ${title}`);
+	log(() => distanceToSubways);
 });
