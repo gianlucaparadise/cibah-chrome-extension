@@ -9,11 +9,15 @@
             ],
             "js": [
                 "libs/jquery-3.1.1.min.js",
+                "libs/jquery-ui-1.12.1.min.js",
                 "libs/lodash.min.js",
                 "utils.js",
                 "helpers/Geocoder.js",
                 "helpers/WalkMeter.js",
                 "immobiliare/inject.js"
+            ],
+            "css": [
+                "libs/jquery-ui-1.12.1.css"
             ],
             "run_at": "document_end"
         }
