@@ -6,6 +6,12 @@ function log(obj) {
     }
 }
 
+function logError(obj, error) {
+    if (debug) {
+        console.error(obj(), error);
+    }
+}
+
 /**
  * Performs an HTTP get request
  * @param {String} url Url for the request
@@ -27,10 +33,39 @@ async function get(url, params) {
     log(() => `Requesting: "${requestUrl}"`);
     const response = await fetch(requestUrl);
 
+    const responseBody = await extractResponseBodyOrNull(response);
+
     if (!response.ok) {
-        throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);
+        throw new NetworkError(`Network response was not ok: ${response.status} - ${response.statusText}`, responseBody);
     }
 
-    const responseBody = await response.json();
     return responseBody;
+}
+
+/**
+ * Extracts the body as json object
+ * @param {Response} response Response object from fetch
+ * @returns {Any} Response body
+ */
+async function extractResponseBodyOrNull(response) {
+    try {
+        return await response.json();
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Network error holding the response body as json
+ */
+class NetworkError {
+    /**
+     * Creates a network error
+     * @param {String} message 
+     * @param {Any} responseBody
+     */
+    constructor(message, responseBody) {
+        this.message = message;
+        this.responseBody = responseBody;
+    }
 }

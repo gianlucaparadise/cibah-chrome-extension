@@ -3,7 +3,7 @@ const baseUrl = "http://localhost:3000/api" // DEV
 
 chrome.runtime.onMessage.addListener(function (message, sender, callback) {
 	if (message.address) {
-		getSubwaysDistanceFromAddress(message.address).then(callback);
+		getSubwaysDistanceFromAddress(message.address).then((response) => callback(response));
 	}
 	return true;
 });
@@ -13,18 +13,24 @@ async function getSubwaysDistanceFromAddress(address) {
 		const location = await getLocationFromAddress(address);
 		if (location == null) {
 			log(() => `Can't find location for: ${address}`);
-			return;
+			throw new Error(`Can't find location for: ${address}`)
 		}
 
-		// log(() => `Title: ${message.address}, Location: ${location.latitude},${location.longitude}`);
-
 		const distanceToSubways = await getSubwaysDistance(location.latitude, location.longitude);
-		return distanceToSubways;
-	} catch (error) {
-		log(() => `Error in getSubwaysDistanceFromAddress for: ${address}`);
-		log(() => error);
+		return new ApiWrapperResponse(distanceToSubways, null);
 
-		return null;
+	} catch (error) {
+		logError(() => `Error in getSubwaysDistanceFromAddress for: ${address}`, error);
+
+		let errorCode = "";
+		if (error instanceof NetworkError && error.responseBody?.errorCode) {
+			errorCode = error.responseBody?.errorCode;
+		}
+		else {
+			errorCode = "GenericError";
+		}
+
+		return new ApiWrapperResponse(null, errorCode);
 	}
 }
 
@@ -51,6 +57,18 @@ async function getSubwaysDistanceFromAddress(address) {
  * @property {Number} distanceMinutes The distance in minutes (walking)
  */
 
+class ApiWrapperResponse {
+	/**
+	 * Create the ApiWrapper Response
+	 * @param {SubwayDistance[]} data Response from backend
+	 * @param {String} error Error from backend
+	 */
+	constructor(data, error) {
+		this.data = data;
+		this.error = error;
+	}
+}
+
 //////  FUNCTIONS
 
 /**
@@ -59,16 +77,9 @@ async function getSubwaysDistanceFromAddress(address) {
  * @returns {Promise<LatLon>} Coordinates of the input address or null when address is not found
  */
 async function getLocationFromAddress(address) {
-	try {
-		const url = `${baseUrl}/geocode`;
-		return await get(url, { address: address });
-
-	} catch (error) {
-		log(() => `Error in getLocationFromAddress for: ${address}`);
-		log(() => error);
-
-		return null;
-	}
+	const url = `${baseUrl}/geocode`;
+	const result = await get(url, { address: address });
+	return result;
 }
 
 /**
@@ -78,14 +89,7 @@ async function getLocationFromAddress(address) {
  * @returns {Promise<SubwayDistance[]>} List of subways and their distances
  */
 async function getSubwaysDistance(latitude, longitude) {
-	try {
-		const url = `${baseUrl}/subwayDistance`;
-		return await get(url, { latitude: latitude, longitude: longitude });
-
-	} catch (error) {
-		log(() => `Error in getSubwaysDistance for: (${latitude},${longitude})`);
-		log(() => error);
-
-		return null;
-	}
+	const url = `${baseUrl}/subwayDistance`;
+	const result = await get(url, { latitude: latitude, longitude: longitude });
+	return result.subways;
 }

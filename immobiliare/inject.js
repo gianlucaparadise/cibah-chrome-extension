@@ -32,18 +32,37 @@ $(document).tooltip({
  * Creates the HTML element with the list of subways
  * @param {any} root Root HTML List Item
  * @param {SubwayDistance[]} distanceToSubways List of subways and their distances
+ * @param {String} error Network Error instance
  */
-function addSubwayItem(root, distanceToSubways) {
+function addSubwayItem(root, distanceToSubways, error) {
 	// Creating the HTML item
 	const hasSubways = distanceToSubways && distanceToSubways.length > 0;
-	const closest = hasSubways ? `${distanceToSubways[0].distanceMinutes.toFixed(0)} min` : "No subways";
 	const itemClass = hasSubways ? cibahSubwaysTooltipClass : cibahZeroSubwaysClass;
+
+	let closest = "";
+	if (error) closest = "Error";
+	else if (!hasSubways) closest = "No subways";
+	else closest = `${distanceToSubways[0].distanceMinutes.toFixed(0)} min`;
 
 	const newItem = $(`<li class="lif__item ${itemClass}">🚉 ${closest}</li>`);
 	newItem.data("cibah", distanceToSubways);
 
 	const listingFeatures = $(root).find(".listing-features");
 	$(listingFeatures).append(newItem);
+}
+
+/**
+ * Process Response from backend
+ * @param {String} title Title that ran the request
+ * @param {HTMLElement} element Html Element where to add the result
+ * @param {ApiWrapperResponse} response Response from backend
+ */
+function onResponse(title, element, response) {
+	log(() => `Received subways for: ${title}`);
+	log(() => response);
+
+	if (response.error) addSubwayItem(element, null, response.error);
+	else addSubwayItem(element, response.data, null);
 }
 
 async function run() {
@@ -54,11 +73,7 @@ async function run() {
 
 		const title = $(element).find(".titolo").text().trim();
 
-		chrome.runtime.sendMessage({ address: title }, (response) => {
-			log(() => `Received subways for: ${title}`);
-			log(() => response);
-			addSubwayItem(element, response)
-		});
+		chrome.runtime.sendMessage({ address: title }, (response) => onResponse(title, element, response));
 	}
 }
 
