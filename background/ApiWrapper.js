@@ -23,8 +23,8 @@ async function getSubwaysDistanceFromAddress(address) {
 		logError(() => `Error in getSubwaysDistanceFromAddress for: ${address}`, error);
 
 		let errorCode = "";
-		if (error instanceof NetworkError && error.responseBody?.errorCode) {
-			errorCode = error.responseBody?.errorCode;
+		if (error.responseBody?.error?.code) {
+			errorCode = error.responseBody.error.code;
 		}
 		else {
 			errorCode = "GenericError";
@@ -36,32 +36,96 @@ async function getSubwaysDistanceFromAddress(address) {
 
 //////  MODELS
 
-/**
- * @typedef LatLon An object representing coordinates
- * @property {Number} latitude - Latitude value
- * @property {Number} longitude - Longitude value
- */
+/** An object representing coordinates */
+class LatLon {
+	/**
+	 * Creates a LatLon object
+	 * @param {Number} latitude Latitude value
+	 * @param {Number} longitude Longitude value
+	 */
+	constructor(latitude, longitude) {
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+}
 
-/**
- * @typedef Subway An object describing a subway
- * @property {String} name Subway Name
- * @property {Number} latitude Latitude value
- * @property {Number} longitude Longitude value
- */
+/** An object describing a subway */
+class Subway {
+	/**
+	 * Creates a Subway object
+	 * @param {String} name Subway Name
+	 * @param {Number} latitude Latitude value
+	 * @param {Number} longitude Longitude value
+	 */
+	constructor(name, latitude, longitude) {
+		this.name = name;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+}
 
-/**
- * @typedef SubwayDistance An object describing the walking distance to a subway
- * @property {Subway} subway The subway
- * @property {LatLon} start The coordinates of the starting point
- * @property {Number} distanceMeters The distance in meters
- * @property {Number} distanceMinutes The distance in minutes (walking)
- */
+/** An object describing the walking distance to a subway */
+class SubwayDistance {
+	/**
+	 * Creates a SubwayDistance object
+	 * @param {Subway} subway The subway
+	 * @param {LatLon} start The coordinates of the starting point
+	 * @param {Number} distanceMeters The distance in meters
+	 * @param {Number} distanceMinutes The distance in minutes (walking)
+	 */
+	constructor(subway, start, distanceMeters, distanceMinutes) {
+		this.subway = subway;
+		this.start = start;
+		this.distanceMeters = distanceMeters;
+		this.distanceMinutes = distanceMinutes;
+	}
+}
 
+/** 
+ * This class is the interface between the background code and
+ * the frontend code. This holds both the error and the response.
+ */
 class ApiWrapperResponse {
 	/**
 	 * Create the ApiWrapper Response
 	 * @param {SubwayDistance[]} data Response from backend
 	 * @param {String} error Error from backend
+	 */
+	constructor(data, error) {
+		this.data = data;
+		this.error = error;
+	}
+}
+
+/** Response Error object */
+class ErrorBody {
+	/**
+	 * @param {String} code Error code
+	 * @param {String} message Error message
+	 */
+	constructor(code, message) {
+		this.code = code;
+		this.message = message;
+	}
+}
+
+/** Response body for the Geocode API */
+class GeocodeResponse {
+	/**
+	 * @param {LatLon} data Coordinates
+	 * @param {ErrorBody} error Error body
+	 */
+	constructor(data, error) {
+		this.data = data;
+		this.error = error;
+	}
+}
+
+/** Response body for the SubwaysDistance API */
+class SubwaysDistanceResponse {
+	/**
+	 * @param {SubwayDistance[]} data Subways
+	 * @param {ErrorBody} error Error body
 	 */
 	constructor(data, error) {
 		this.data = data;
@@ -78,8 +142,11 @@ class ApiWrapperResponse {
  */
 async function getLocationFromAddress(address) {
 	const url = `${baseUrl}/geocode`;
+
+	/** @type {GeocodeResponse} */
 	const result = await get(url, { address: address });
-	return result;
+
+	return result.data;
 }
 
 /**
@@ -90,6 +157,9 @@ async function getLocationFromAddress(address) {
  */
 async function getSubwaysDistance(latitude, longitude) {
 	const url = `${baseUrl}/subwayDistance`;
+
+	/** @type {SubwaysDistanceResponse} */
 	const result = await get(url, { latitude: latitude, longitude: longitude });
-	return result.subways;
+
+	return result.data;
 }
