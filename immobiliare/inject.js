@@ -30,11 +30,11 @@ $(document).tooltip({
 
 /**
  * Creates the HTML element with the list of subways
- * @param {any} root Root HTML List Item
+ * @param {HTMLElement} lifItem Root HTML List Item
  * @param {SubwayDistance[]} distanceToSubways List of subways and their distances
  * @param {String} error Network Error instance
  */
-function addSubwayItem(root, distanceToSubways, error) {
+function updateSubwayItem(lifItem, distanceToSubways, error) {
 	// Creating the HTML item
 	const hasSubways = distanceToSubways && distanceToSubways.length > 0;
 	const itemClass = hasSubways ? cibahSubwaysTooltipClass : cibahZeroSubwaysClass;
@@ -44,25 +44,24 @@ function addSubwayItem(root, distanceToSubways, error) {
 	else if (!hasSubways) closest = "No subways";
 	else closest = `${distanceToSubways[0].distanceMinutes.toFixed(0)} min`;
 
-	const newItem = $(`<li class="lif__item ${itemClass}">🚉 ${closest}</li>`);
-	newItem.data("cibah", distanceToSubways);
-
-	const listingFeatures = $(root).find(".listing-features");
-	$(listingFeatures).append(newItem);
+	$(lifItem)
+		.addClass(itemClass)
+		.text(`🚉 ${closest}`)
+		.data("cibah", distanceToSubways);
 }
 
 /**
  * Process Response from backend
  * @param {String} title Title that ran the request
- * @param {HTMLElement} element Html Element where to add the result
+ * @param {HTMLElement} lifItem Html Element representing the new lif-item
  * @param {ApiWrapperResponse} response Response from backend
  */
-function onResponse(title, element, response) {
+function onResponse(title, lifItem, response) {
 	log(() => `Received subways for: ${title}`);
 	log(() => response);
 
-	if (response.error) addSubwayItem(element, null, response.error);
-	else addSubwayItem(element, response.data, null);
+	if (response.error) updateSubwayItem(lifItem, null, response.error);
+	else updateSubwayItem(lifItem, response.data, null);
 }
 
 async function run() {
@@ -73,7 +72,12 @@ async function run() {
 
 		const title = $(element).find(".titolo").text().trim();
 
-		chrome.runtime.sendMessage({ address: title }, (response) => onResponse(title, element, response));
+		// For each row, I add a Loading element
+		const newLifItem = $(`<li class="lif__item">🚉 Loading...</li>`);
+		const listingFeatures = $(element).find(".listing-features");
+		$(listingFeatures).append(newLifItem);
+
+		chrome.runtime.sendMessage({ address: title }, (response) => onResponse(title, newLifItem, response));
 	}
 }
 
